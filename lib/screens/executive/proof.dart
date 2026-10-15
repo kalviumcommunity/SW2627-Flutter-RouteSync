@@ -1,0 +1,4 @@
+import 'package:flutter/material.dart';
+import '../../models/delivery_model.dart';
+
+class ProofScreen extends StatelessWidget { final DeliveryModel delivery; const ProofScreen({super.key, required this.delivery}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Delivery proof')), body: Padding(padding: const EdgeInsets.all(20), child: Column(children: [if (delivery.proofImageUrl != null) Image.network(delivery.proofImageUrl!, errorBuilder: (_, __, ___) => const Text('Proof image unavailable.')) else const Text('No proof has been recorded for this delivery.'), const Spacer(), Card(child: Padding(padding: const EdgeInsets.all(16), child: Text('Proof upload is unavailable until the image picker and Firebase Storage integration are connected.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))))])); }
