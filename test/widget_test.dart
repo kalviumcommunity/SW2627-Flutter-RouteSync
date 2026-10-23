@@ -1,14 +1,12 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:routesync/main.dart';
 
 void main() {
-  testWidgets('Flutter app displays the counter demo', (
+  testWidgets('RouteSync app displays its home screen', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('Flutter Demo Home Page'), findsOneWidget);
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('RouteSync - Firebase Connected'), findsOneWidget);
   });
 }

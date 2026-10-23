@@ -1,3 +1,5 @@
+import 'firestore_value_converters.dart';
+import '../utils/app_constants.dart';
 
 class EscalationModel {
   final String id;
@@ -16,26 +18,25 @@ class EscalationModel {
     required this.raisedBy,
     required this.reason,
     required this.description,
-    this.priority = 'MEDIUM',
-    this.status = 'OPEN',
+    this.priority = EscalationValues.medium,
+    this.status = EscalationValues.open,
     this.createdAt,
     this.resolvedAt,
   });
 
-  factory EscalationModel.fromMap(
-    String id,
-    Map<String, dynamic> data,
-  ) {
+  factory EscalationModel.fromMap(String id, Map<String, dynamic> data) {
     return EscalationModel(
       id: id,
-      deliveryId: data['deliveryId'] as String? ?? '',
-      raisedBy: data['raisedBy'] as String? ?? '',
-      reason: data['reason'] as String? ?? '',
-      description: data['description'] as String? ?? '',
-      priority: data['priority'] as String? ?? 'MEDIUM',
-      status: data['status'] as String? ?? 'OPEN',
-      createdAt: data['createdAt'] as DateTime?,
-      resolvedAt: data['resolvedAt'] as DateTime?,
+      deliveryId: _stringValue(data['deliveryId']) ?? '',
+      raisedBy: _stringValue(data['raisedBy']) ?? '',
+      reason: _stringValue(data['reason']) ?? '',
+      description: _stringValue(data['description']) ?? '',
+      priority: EscalationValues.normalizePriority(
+        _stringValue(data['priority']),
+      ),
+      status: EscalationValues.normalizeStatus(_stringValue(data['status'])),
+      createdAt: dateTimeFromFirestore(data['createdAt']),
+      resolvedAt: dateTimeFromFirestore(data['resolvedAt']),
     );
   }
 
@@ -47,8 +48,12 @@ class EscalationModel {
       'description': description,
       'priority': priority,
       'status': status,
-      'createdAt': createdAt,
-      'resolvedAt': resolvedAt,
+      'createdAt': dateTimeToFirestore(createdAt),
+      'resolvedAt': dateTimeToFirestore(resolvedAt),
     };
+  }
+
+  static String? _stringValue(Object? value) {
+    return value is String ? value : null;
   }
 }

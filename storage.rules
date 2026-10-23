@@ -1,0 +1,38 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isActiveUser() {
+      return signedIn()
+        && firestore.get(
+          /databases/(default)/documents/users/$(request.auth.uid)
+        ).data.active == true;
+    }
+
+    function isDispatcher() {
+      return isActiveUser()
+        && firestore.get(
+          /databases/(default)/documents/users/$(request.auth.uid)
+        ).data.role == 'DISPATCHER';
+    }
+
+    match /deliveries/{deliveryId}/{fileName} {
+      allow read: if isActiveUser()
+        && (isDispatcher()
+          || firestore.get(
+            /databases/(default)/documents/deliveries/$(deliveryId)
+          ).data.assignedExecutiveId == request.auth.uid);
+      allow write: if isActiveUser()
+        && firestore.get(
+          /databases/(default)/documents/deliveries/$(deliveryId)
+        ).data.assignedExecutiveId == request.auth.uid
+        && request.resource.size > 0
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

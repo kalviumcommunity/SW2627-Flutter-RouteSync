@@ -1,0 +1,122 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isActiveUser() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active
+          == true;
+    }
+
+    function isDispatcher() {
+      return isActiveUser()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          == 'DISPATCHER';
+    }
+
+    function isExecutive() {
+      return isActiveUser()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          == 'EXECUTIVE';
+    }
+
+    function isActiveExecutive(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role
+          == 'EXECUTIVE'
+        && get(/databases/$(database)/documents/users/$(userId)).data.active
+          == true;
+    }
+
+    function validStatus(status) {
+      return status in [
+        'ASSIGNED',
+        'PICKED UP',
+        'OUT FOR DELIVERY',
+        'DELIVERED',
+        'FAILED'
+      ];
+    }
+
+    function validTransition(before, after) {
+      return (before == 'ASSIGNED' && after == 'PICKED UP')
+        || (before == 'PICKED UP' && after == 'OUT FOR DELIVERY')
+        || (before == 'OUT FOR DELIVERY'
+          && (after == 'DELIVERED' || after == 'FAILED'));
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isDispatcher());
+      allow create: if false;
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.active == resource.data.active;
+      allow delete: if false;
+    }
+
+    match /deliveries/{deliveryId} {
+      allow read: if isDispatcher()
+        || (isExecutive() && resource.data.assignedExecutiveId == request.auth.uid);
+
+      allow update: if (isDispatcher()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'assignedExecutiveId',
+            'updatedAt'
+          ])
+          && isActiveExecutive(request.resource.data.assignedExecutiveId))
+        || (isExecutive()
+          && resource.data.assignedExecutiveId == request.auth.uid
+          && request.resource.data.assignedExecutiveId
+            == resource.data.assignedExecutiveId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status',
+            'failureReason',
+            'notes',
+            'proofImageUrl',
+            'updatedAt'
+          ])
+          && (
+            (
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['status'])
+              && validStatus(request.resource.data.status)
+              && validTransition(
+                resource.data.status,
+                request.resource.data.status
+              )
+            )
+            || (
+              !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['status'])
+              && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['failureReason', 'notes', 'proofImageUrl', 'updatedAt'])
+            )
+          ));
+      allow create, delete: if false;
+    }
+
+    match /escalations/{escalationId} {
+      allow read: if isDispatcher()
+        || (signedIn() && resource.data.raisedBy == request.auth.uid);
+
+      allow create: if isExecutive()
+        && request.resource.data.raisedBy == request.auth.uid
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.priority in ['LOW', 'MEDIUM', 'HIGH']
+        && get(/databases/$(database)/documents/deliveries/$(request.resource.data.deliveryId))
+          .data.assignedExecutiveId == request.auth.uid;
+
+      allow update: if isDispatcher()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'resolvedAt'
+        ])
+        && request.resource.data.status == 'RESOLVED';
+      allow delete: if false;
+    }
+  }
+}
