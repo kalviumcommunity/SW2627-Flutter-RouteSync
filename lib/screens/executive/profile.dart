@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+
+import 'executive_repository.dart';
+
+class ProfileScreen extends StatefulWidget {
+  final ExecutiveSnapshot? snapshot;
+  final Future<void> Function() onSignOut;
+  const ProfileScreen({
+    super.key,
+    required this.snapshot,
+    required this.onSignOut,
+  });
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _busy = false;
+  Future<void> _signOut() async {
+    setState(() => _busy = true);
+    try {
+      await widget.onSignOut();
+      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.snapshot?.user;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const CircleAvatar(child: Icon(Icons.person)),
+            title: Text(
+              user?.name.isNotEmpty == true
+                  ? user!.name
+                  : 'Profile unavailable',
+            ),
+            subtitle: Text(
+              user?.email ?? 'Connect authentication to view your profile',
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            title: const Text('Role'),
+            subtitle: Text(user?.role ?? 'Not available'),
+          ),
+          ListTile(
+            title: const Text('City'),
+            subtitle: Text(user?.city ?? 'Not available'),
+          ),
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: _busy ? null : _signOut,
+            icon: const Icon(Icons.logout),
+            label: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+  }
+}

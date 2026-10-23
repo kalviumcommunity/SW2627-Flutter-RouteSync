@@ -1,3 +1,5 @@
+import 'firestore_value_converters.dart';
+import '../utils/app_constants.dart';
 
 class DeliveryModel {
   final String id;
@@ -30,25 +32,21 @@ class DeliveryModel {
     this.updatedAt,
   });
 
-  factory DeliveryModel.fromMap(
-    String id,
-    Map<String, dynamic> data,
-  ) {
+  factory DeliveryModel.fromMap(String id, Map<String, dynamic> data) {
     return DeliveryModel(
       id: id,
-      orderId: data['orderId'] as String? ?? '',
-      customerName: data['customerName'] as String? ?? '',
-      customerPhone: data['customerPhone'] as String? ?? '',
-      address: data['address'] as String? ?? '',
-      city: data['city'] as String? ?? '',
-      assignedExecutiveId:
-          data['assignedExecutiveId'] as String? ?? '',
-      status: data['status'] as String? ?? 'ASSIGNED',
-      failureReason: data['failureReason'] as String?,
-      notes: data['notes'] as String?,
-      proofImageUrl: data['proofImageUrl'] as String?,
-      createdAt: (data['createdAt'] as DateTime?),
-      updatedAt: (data['updatedAt'] as DateTime?),
+      orderId: _stringValue(data['orderId']) ?? '',
+      customerName: _stringValue(data['customerName']) ?? '',
+      customerPhone: _stringValue(data['customerPhone']) ?? '',
+      address: _stringValue(data['address']) ?? '',
+      city: _stringValue(data['city']) ?? '',
+      assignedExecutiveId: _stringValue(data['assignedExecutiveId']) ?? '',
+      status: DeliveryStatuses.normalize(_stringValue(data['status'])),
+      failureReason: _stringValue(data['failureReason']),
+      notes: _stringValue(data['notes']),
+      proofImageUrl: _stringValue(data['proofImageUrl']),
+      createdAt: dateTimeFromFirestore(data['createdAt']),
+      updatedAt: dateTimeFromFirestore(data['updatedAt']),
     );
   }
 
@@ -64,8 +62,12 @@ class DeliveryModel {
       'failureReason': failureReason,
       'notes': notes,
       'proofImageUrl': proofImageUrl,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'createdAt': dateTimeToFirestore(createdAt),
+      'updatedAt': dateTimeToFirestore(updatedAt),
     };
+  }
+
+  static String? _stringValue(Object? value) {
+    return value is String ? value : null;
   }
 }

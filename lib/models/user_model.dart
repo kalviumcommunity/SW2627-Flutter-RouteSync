@@ -1,3 +1,4 @@
+import '../utils/app_constants.dart';
 
 class UserModel {
   final String id;
@@ -19,11 +20,11 @@ class UserModel {
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
     return UserModel(
       id: id,
-      name: data['name'] as String? ?? '',
-      email: data['email'] as String? ?? '',
-      role: data['role'] as String? ?? 'executive',
-      city: data['city'] as String? ?? '',
-      active: data['active'] as bool? ?? true,
+      name: _stringValue(data['name']) ?? '',
+      email: _stringValue(data['email']) ?? '',
+      role: UserRoles.normalize(_stringValue(data['role'])),
+      city: _stringValue(data['city']) ?? '',
+      active: data['active'] is bool ? data['active'] as bool : true,
     );
   }
 
@@ -35,5 +36,9 @@ class UserModel {
       'city': city,
       'active': active,
     };
+  }
+
+  static String? _stringValue(Object? value) {
+    return value is String ? value : null;
   }
 }

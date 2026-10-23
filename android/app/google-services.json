@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "641941010534",
+    "project_id": "routesync-c3153",
+    "storage_bucket": "routesync-c3153.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:641941010534:android:3256102f326f3c7e5095a7",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDubENUH4Ipaki3D1KsLOoxIoSMfCcp410"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
