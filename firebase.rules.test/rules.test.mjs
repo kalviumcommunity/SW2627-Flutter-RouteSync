@@ -12,6 +12,7 @@ import {
   setDoc,
   updateDoc,
   addDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import {
   ref,
@@ -65,6 +66,10 @@ async function seed() {
         status: 'ASSIGNED',
       }),
       setDoc(doc(firestore, 'deliveries', 'delivery-transition'), {
+        assignedExecutiveId: role.executiveA,
+        status: 'ASSIGNED',
+      }),
+      setDoc(doc(firestore, 'deliveries', 'delivery-failed'), {
         assignedExecutiveId: role.executiveA,
         status: 'ASSIGNED',
       }),
@@ -154,6 +159,24 @@ test('users cannot change their own role or active flag', async () => {
   const user = doc(db(role.executiveA), 'users', role.executiveA);
   await assertFails(updateDoc(user, { role: 'DISPATCHER' }));
   await assertFails(updateDoc(user, { active: false }));
+  await assertFails(
+    setDoc(doc(db(role.executiveA), 'users', 'new-user'), {
+      role: 'EXECUTIVE',
+      active: true,
+    }),
+  );
+});
+
+test('clients cannot create or delete deliveries', async () => {
+  await assertFails(
+    setDoc(doc(db(role.dispatcher), 'deliveries', 'client-created'), {
+      assignedExecutiveId: role.executiveA,
+      status: 'ASSIGNED',
+    }),
+  );
+  await assertFails(
+    deleteDoc(doc(db(role.dispatcher), 'deliveries', 'delivery-a')),
+  );
 });
 
 test('executives can only make valid forward delivery transitions', async () => {
@@ -165,6 +188,44 @@ test('executives can only make valid forward delivery transitions', async () => 
   await assertSucceeds(updateDoc(delivery, { status: 'PICKED UP' }));
   await assertSucceeds(updateDoc(delivery, { status: 'OUT FOR DELIVERY' }));
   await assertFails(updateDoc(delivery, { status: 'ASSIGNED' }));
+});
+
+test('failed deliveries require an allowed failure reason', async () => {
+  const delivery = doc(
+    db(role.executiveA),
+    'deliveries',
+    'delivery-failed',
+  );
+  await assertSucceeds(
+    updateDoc(delivery, {
+      status: 'PICKED UP',
+      failureReason: null,
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(delivery, {
+      status: 'OUT FOR DELIVERY',
+      failureReason: null,
+    }),
+  );
+  await assertFails(
+    updateDoc(delivery, {
+      status: 'FAILED',
+      failureReason: 'Forged reason',
+    }),
+  );
+  await assertFails(
+    updateDoc(delivery, {
+      status: 'FAILED',
+      failureReason: null,
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(delivery, {
+      status: 'FAILED',
+      failureReason: 'Customer unavailable',
+    }),
+  );
 });
 
 test('escalations enforce assignment and dispatcher resolution', async () => {

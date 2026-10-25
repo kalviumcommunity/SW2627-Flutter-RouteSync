@@ -20,8 +20,8 @@ class DeliveryDetailsScreen extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final firebaseRepository = repository is FirebaseExecutiveRepository
-        ? repository as FirebaseExecutiveRepository
+    final proofRepository = repository is ExecutiveProofUploadRepository
+        ? repository as ExecutiveProofUploadRepository
         : null;
     return Scaffold(
       appBar: AppBar(
@@ -112,12 +112,12 @@ class DeliveryDetailsScreen extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) => ProofScreen(
                   delivery: delivery,
-                  onUpload: firebaseRepository != null
+                  onUpload: proofRepository != null
                       ? ({
                           required Uint8List bytes,
                           required String contentType,
                           required String extension,
-                        }) => firebaseRepository.uploadProofBytes(
+                        }) => proofRepository.uploadProofBytes(
                           delivery: delivery,
                           bytes: bytes,
                           contentType: contentType,

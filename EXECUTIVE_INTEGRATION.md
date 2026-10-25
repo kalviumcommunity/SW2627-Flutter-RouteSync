@@ -13,3 +13,19 @@ Required operations:
 - Notifications: provide a real notification model/service or keep the current unsupported state. Do not create local or fabricated notification records.
 
 Required integration inputs are Firebase initialization/options, Auth service identity/profile APIs, Firestore collection/query names and timestamp conversion, Storage rules/path, notification schema/service, and Security Rules that enforce executive ownership and allowed writes.
+
+## Provisioning policy
+
+Client applications do not create or delete delivery documents and do not create
+or promote user profiles. `firestore.rules` denies those writes. Delivery
+creation, assignment bootstrap, and profile provisioning must be performed by a
+trusted administrative workflow (for example, a controlled backend or Firebase
+Admin process). This keeps role and ownership data outside user-controlled
+clients.
+
+The legacy `ExecutiveRepository.uploadProof(DeliveryModel)` method remains for
+source compatibility with existing repository fakes, but it cannot select an
+image without bytes. Production proof upload uses the
+`ExecutiveProofUploadRepository.uploadProofBytes` capability after the UI
+selects an image; it reports success only after Storage upload and the
+Firestore proof URL update both complete.

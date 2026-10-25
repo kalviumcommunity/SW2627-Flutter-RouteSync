@@ -26,6 +26,15 @@ abstract class ExecutiveRepository {
   Future<void> signOut();
 }
 
+abstract class ExecutiveProofUploadRepository {
+  Future<String> uploadProofBytes({
+    required DeliveryModel delivery,
+    required Uint8List bytes,
+    required String contentType,
+    String extension = 'jpg',
+  });
+}
+
 abstract class ExecutiveRealtimeRepository implements ExecutiveRepository {
   Stream<ExecutiveSnapshot> watch();
 }
@@ -72,7 +81,8 @@ class UnavailableExecutiveRepository implements ExecutiveRepository {
   Future<void> signOut() async {}
 }
 
-class FirebaseExecutiveRepository implements ExecutiveRealtimeRepository {
+class FirebaseExecutiveRepository
+    implements ExecutiveRealtimeRepository, ExecutiveProofUploadRepository {
   final AuthService authService;
   final DeliveryService deliveryService;
   final EscalationService escalationService;
@@ -134,12 +144,19 @@ class FirebaseExecutiveRepository implements ExecutiveRealtimeRepository {
   }
 
   @override
+  /// Kept for callers that only have the legacy repository interface.
+  ///
+  /// Image selection belongs to the UI; use [uploadProofBytes] after the
+  /// selected image has been read.
   Future<String> uploadProof(DeliveryModel delivery) {
     return Future.error(
-      UnsupportedError('Image selection is not configured for proof upload.'),
+      UnsupportedError(
+        'Proof bytes are required. Use uploadProofBytes after image selection.',
+      ),
     );
   }
 
+  @override
   Future<String> uploadProofBytes({
     required DeliveryModel delivery,
     required Uint8List bytes,

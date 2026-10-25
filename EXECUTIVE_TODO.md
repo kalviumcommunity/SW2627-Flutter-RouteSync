@@ -7,15 +7,11 @@
 - [x] Add duplicate-submission guards and persistence error feedback.
 - [x] Add focused workflow and unavailable-persistence tests.
 - [x] Add widget coverage for dashboard navigation, required failure/escalation fields, and pending-submit protection.
-- [ ] Execute the authored widget/unit tests and record a passing result.
-- [x] Remove misleading proof upload action until picker and Storage are available.
-- [x] Document the Teammate 3 integration contract in `EXECUTIVE_INTEGRATION.md`.
-- [ ] Connect `ExecutiveRepository` to authenticated Firestore services.
-- [ ] Add Firebase initialization, Storage/image-picker integration, and notification service.
-- [ ] Run `dart format`, `flutter analyze`, and `flutter test` after Flutter SDK setup.
+- [x] Execute the authored widget/unit tests and record a passing result.
+- [x] Connect `ExecutiveRepository` to authenticated Firestore services.
+- [x] Add Firebase initialization, Storage/image-picker integration, and notification placeholder state.
+- [x] Run `flutter analyze` and `flutter test` after Flutter SDK setup.
 
-Test evidence: widget and unit tests are written and pass editor diagnostics, but have not executed because `dart`, `flutter`, and `fvm` are unavailable on PATH and no common SDK location is present.
+Current validation: `flutter test` passes all 29 tests and `flutter analyze` reports no issues. The emulator-backed rules suite passes 10 tests, and the authenticated integration suite passes 6 tests covering sign-in/profile validation, executive retrieval and transitions, dispatcher real-time updates, offline cache reads, escalation resolution, and Storage proof upload.
 
-Verified blockers: `pubspec.yaml` has no Firebase, Storage, image-picker, or notification dependencies; `lib/services/auth_service.dart`, `delivery_service.dart`, `escalation_service.dart`, and `storage_service.dart` are empty; and no Firebase config or security rules were found.
-
-Next actions: Teammate 3 supplies the authenticated service implementations, Firebase options and Security Rules, Firestore timestamp conversion, Storage path/rules, and notification contract. Then inject the implementation into `ExecutiveHome`, add the picker/SDK dependencies, run `dart format lib test`, `flutter analyze`, and `flutter test`, and fix any SDK-specific diagnostics.
+Remaining integration work: add a device-level session-restoration test for Firebase Auth persistence, and replace the notification placeholder with a real notification contract if notifications are required for sign-off.

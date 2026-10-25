@@ -48,6 +48,17 @@ service cloud.firestore {
           && (after == 'DELIVERED' || after == 'FAILED'));
     }
 
+    function validFailureReason(reason) {
+      return reason in [
+        'Customer unavailable',
+        'Incorrect address',
+        'Customer refused delivery',
+        'Vehicle issue',
+        'Delivery area inaccessible',
+        'Other'
+      ];
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isDispatcher());
       allow create: if false;
@@ -88,12 +99,24 @@ service cloud.firestore {
                 resource.data.status,
                 request.resource.data.status
               )
+              && (
+                request.resource.data.status != 'FAILED'
+                || validFailureReason(
+                  request.resource.data.get('failureReason', '')
+                )
+              )
             )
             || (
               !request.resource.data.diff(resource.data).affectedKeys()
                 .hasAny(['status'])
               && request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['failureReason', 'notes', 'proofImageUrl', 'updatedAt'])
+              && (
+                !request.resource.data.diff(resource.data).affectedKeys()
+                  .hasAny(['failureReason'])
+                || request.resource.data.get('failureReason', null) == null
+                || validFailureReason(request.resource.data.failureReason)
+              )
             )
           ));
       allow create, delete: if false;
